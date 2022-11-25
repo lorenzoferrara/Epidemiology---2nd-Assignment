@@ -1,0 +1,97 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(spdep)
+library(sf)
+library(maptools)
+# load("practice1.Rdata")
+```
+
+```{r}
+st.SMR<-(NW.dataset$SMR-mean(NW.dataset$SMR))/sd(NW.dataset$SMR)
+xx<-moran.plot(st.SMR, w.sids ,labels=as.factor(NW.dataset$NAME), pch=19, main="Moran Plot")
+```
+
+```{r}
+label.colors<-c(rep("black",100))
+label.colors[NW.dataset$NAME==130]<-"red"
+plot(NW.dataset)
+text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4,col=label.colors)
+```
+
+```{r}
+sids.local.moran<-localmoran(NW.dataset$SMR , w.sids)
+dim(sids.local.moran)
+
+head(sids.local.moran)
+```
+
+```{r}
+dat<-data.frame(name = NW.dataset$NAME,sids.local.moran)
+colnames(dat)[6]="P-value"
+head(dat)
+```
+
+```{r}
+dat[order(dat$P),c(1,2,6)]
+```
+
+```{r}
+slot(NW.dataset,"data")<-cbind(slot(NW.dataset,"data"),sids.local.moran)
+
+```
+
+```{r}
+#Intervals
+l.inf<-round(min(NW.dataset$Ii),digits=2)
+l.sup<-round(max(NW.dataset$Ii),digits=2)
+library(classInt)
+
+I.b5<-findInterval(NW.dataset$Ii,c((l.inf-0.01),-1,-0.5,0.5,1.5,(l.sup+0.01)))
+breakI<-c((l.inf-0.1),-1,-0.5,0.5,1.5,(l.sup+0.1))
+pal.I<- c("yellow3", "orange2", "gray80", "grey60","grey15")
+
+# to look a list of colours of the R, use the function colours()
+
+#Colour assignment based on intervals
+plot(NW.dataset, col=pal.I[I.b5], main="Test statistic")
+text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
+legend("bottomright", legend=leglabs(breakI),fill=pal.I, cex=0.4)#, bty="n")
+```
+
+```{r}
+#Plot p value
+Ip.2<-findInterval(NW.dataset$'Pr(z != E(Ii))',c(0,0.05, 1))
+breaksp<-c(0,0.05, 1)
+pal.p<- gray.colors(2,0.4,0.95)
+plot(NW.dataset, col=pal.p[Ip.2], main="P-value")
+legend("bottomright", legend=leglabs(breaksp),fill=pal.p, cex=0.4, bty="n")
+text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
+```
+
+```{r}
+par(mfrow=c(1,1))
+plot(NW.dataset, col=my.colours[findInterval(NW.dataset$SMR, brks,all.inside=TRUE)])
+legend(x=c(-84, -80), y=c(33, 34.5), legend=leglabs(brks),fill=my.colours, bty="n",cex=0.4)
+title(main=paste("Standardized Mortality Rate (SMR) during 1982-1991"))
+text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
+```
+
+```{r}
+SMR1<-slot(NW.dataset,"data")[slot(NW.dataset,"data")$NAME=="Union","SMR"]
+SMR2<-slot(NW.dataset,"data")[slot(NW.dataset,"data")$NAME=="Richmond","SMR"]
+SMR3<-slot(NW.dataset,"data")[slot(NW.dataset,"data")$NAME=="Martin","SMR"]
+save.image("practice2.Rdata")
+```
+
+
+
+
