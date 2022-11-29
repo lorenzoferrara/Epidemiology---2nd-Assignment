@@ -1,7 +1,23 @@
 ---
-title: "R Notebook"
-output: html_notebook
+title: "Assignment 2 Spatial Epidemiology"
+author: "Ferrara Lorenzo, Lucchini Marco"
+date: "29-11-2022"
 ---
+
+```{r include=FALSE}
+knitr::opts_chunk$set( echo=F )
+knitr::opts_chunk$set(out.width = '70%')
+knitr::opts_chunk$set(fig.align = "center")
+knitr::opts_chunk$set(tidy =TRUE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+Description:
+
+Data of the incidence of larynx cancer diagnosed during 10 years (1982-1991) in the districts of Mersey and West Lancashire in the north-east of England is in the file larynx-dates.odc. They have detected 876 cases in 144 electoral districts. The number of expected cases were calculated using internal standardization, based on the specific rates of sex and age in the zone of
+study (with the population of the census 1991). 
+
+1) Perform an exploratory analysis to study the possible spatial correlation of the larynx incidence (Standardized Mobility Ratio SMR) (considering neighbours those regions that share geographic limits and the matrix of weights as the matrix standardised by rows)
 
 ```{r}
 rm(list=ls())
@@ -72,7 +88,7 @@ my.colours <- c("yellow", "orange2", "red3", "brown", "black")
 library(classInt)
 ```
 
-```{r}
+```{r warning=FALSE}
 library(maptools)
 plot(NW.dataset, col=my.colours[findInterval(NW.dataset$SMR, brks,all.inside=TRUE)])
 legend(x=c(-84, -80), y=c(33, 34.5), legend=leglabs(brks),fill=my.colours, bty="n",cex=0.5)
