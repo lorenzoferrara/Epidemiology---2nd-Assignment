@@ -1,0 +1,402 @@
+---
+title: "Assignment 2 Spatial Epidemiology"
+author: "Ferrara Lorenzo, Lucchini Marco"
+date: "29-11-2022"
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set( echo=F )
+knitr::opts_chunk$set(out.width = '70%')
+knitr::opts_chunk$set(fig.align = "center")
+knitr::opts_chunk$set(tidy =TRUE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+```{r include=FALSE}
+library(spdep)
+library(sf)
+library(classInt)
+library(maptools)
+library(R2WinBUGS)
+library(foreign)
+library(spatialreg)
+
+# load("data.Rdata")
+```
+
+Description:
+
+Data of the incidence of larynx cancer diagnosed during 10 years (1982-1991) in the districts of Mersey and West Lancashire in the north-east of England is in the file larynx-dates.odc. They have detected 876 cases in 144 electoral districts. The number of expected cases were calculated using internal standardization, based on the specific rates of sex and age in the zone of
+study (with the population of the census 1991). 
+
+1) Perform an exploratory analysis to study the possible spatial correlation of the larynx incidence (Standardized Mobility Ratio, SMR) (considering neighbors those regions that share geographic limits and the matrix of weights as the matrix standardized by rows)
+
+NELLA EXPLORATRY ANALISYS MAGAR DEVO DIRE IL NUMER DI REGIONI, IL NUMERO DI LINKS, IL NUMERO TOTALE DI VICINI, IL IPO DI LINK USATO E DI WEIGHTS USATO.
+USA LA FUNZIONE SUMARY PE FARTI VENIRE DELLE IDEE
+summary(oggetto xxnb) o un summary simile
+
+```{r}
+rm(list=ls())
+
+data = list(
+
+N = 144, 
+            
+O = c(5, 7, 0, 0, 8, 5, 1, 10, 3, 5, 
+4, 7, 3, 6, 1, 5, 4, 6, 3, 3, 2, 2, 9, 8, 6, 10, 9, 15, 14, 12, 
+11, 23, 12, 4, 27, 10, 10, 10, 13, 10, 7, 13, 16, 4, 9, 4, 13, 
+4, 10, 12, 18, 13, 25, 5, 12, 6, 5, 2, 3, 6, 4, 4, 6, 1, 5, 9, 
+7, 1, 5, 1, 4, 3, 3, 2, 3, 9, 5, 9, 19, 4, 12, 1, 2, 8, 6, 4, 
+2, 4, 8, 4, 6, 7, 4, 10, 4, 7, 8, 12, 12, 8, 6, 2, 7, 7, 7, 4, 
+10, 8, 3, 5, 6, 9, 3, 10, 9, 8, 9, 6, 3, 1, 0, 1, 1, 3, 1, 0, 
+1, 0, 2, 5, 0, 0, 1, 0, 0, 1, 2, 4, 2, 2, 3, 0, 0, 1), 
+
+E = c(2.53, 3.94, 3.09, 2.75, 3.81, 3.66, 4.05, 3.07, 3.42, 4.24, 3.9, 3.58, 
+3.68, 3.19, 5.15, 3.75, 3.37, 4.52, 1.94, 3.47, 3.48, 3.32, 4.52, 
+9.2, 10.37, 8.08, 6.66, 7.7, 9.79, 9.77, 10.17, 9.93, 9.53, 10.59, 
+7.64, 7.03, 4.09, 7.66, 8.02, 6.78, 9.85, 7.98, 8.14, 4.07, 7.54, 
+7.04, 7.99, 8.1, 5.69, 6.37, 8.2, 6.52, 4.68, 9.11, 11.28, 6.18, 
+4.79, 4.98, 6.47, 5.43, 6.51, 4.44, 6.69, 5.55, 6.24, 5.27, 5.61, 
+5.31, 6.92, 5.17, 5.13, 3.73, 6.18, 9.44, 7.3, 7.63, 11.66, 6.52, 
+6.64, 10.64, 7.15, 8.76, 7.48, 6.06, 6.36, 7.98, 8.92, 9.07, 
+6.2, 7.37, 6.68, 8.62, 8.05, 5.97, 8.65, 7.04, 8.91, 5.95, 7.5, 
+9.11, 10.59, 7.64, 8.91, 8.72, 11.7, 10.69, 7.73, 8.52, 7.81, 
+9.24, 8.25, 10.72, 10.33, 8.19, 10.9, 7, 9.98, 10.1, 2.33, 3.49, 
+0.78, 3.59, 2.47, 4.1, 1.82, 0.71, 1.44, 1.76, 3.39, 2.19, 1.66, 
+1.35, 2.27, 2.11, 1.05, 2.22, 3.24, 2.65, 3.15, 1.94, 3.13, 1.95, 
+2.16, 1.76))
+
+SMR = data$O/data$E
+
+lunghezza = length(SMR)
+```
+
+```{r}
+
+
+shp.file <- read_sf(dsn = ".", layer = "NWEngland")
+spatial.file <- sf::as_Spatial(shp.file)
+spatial.file$geometry <- NULL #Eliminate this geographic information
+```
+
+```{r}
+df <- as.data.frame(spatial.file) #Create a data.frame
+NW.dataset <- sp::SpatialPolygonsDataFrame(spatial.file, data = df )
+```
+
+```{r}
+hist(SMR, xlab="Standardized Mortality Rate (SMR)", main="")
+```
+
+```{r}
+NW.dataset$SMR<-SMR
+NW.dataset$NAME = NW.dataset$poly_id
+
+plot(NW.dataset, border="blue", axes=TRUE, las=1)
+text(coordinates(NW.dataset),label=NW.dataset$NAME,cex=0.4)
+```
+
+```{r}
+brks <- round(quantile(NW.dataset$SMR, probs=seq(0,1,0.2)), digits=2)
+my.colours <- c("yellow", "orange2", "red3", "brown", "black")
+```
+
+```{r warning=FALSE}
+plot(NW.dataset, col=my.colours[findInterval(NW.dataset$SMR, brks,all.inside=TRUE)])
+legend("right", legend=leglabs(brks),fill=my.colours, bty="n",cex=0.99)
+title(main=paste("Standardized Mortality Rate (SMR) during 1982-1991"))
+text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
+```
+
+#ALTRE PALETTE
+```{r}
+my.colours<-gray.colors(5,0.95,0.2)
+plot(NW.dataset, col=my.colours[findInterval(NW.dataset$SMR, brks,all.inside=TRUE)])
+legend("right", legend=leglabs(brks),fill=my.colours, bty="n",cex=1)
+title(main=paste("Standardized Mortality Rate (SMR) during 1982-1991"))
+text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.5)
+```
+
+
+```{r}
+
+#A terrain color palette.
+my.colours<- terrain.colors(5)
+plot(NW.dataset, col=my.colours[findInterval(NW.dataset$SMR, brks,all.inside=TRUE)])
+legend("right", legend=leglabs(brks),fill=my.colours, bty="n",cex=1)
+title(main=paste("Standardized Mortality Rate (SMR) during 1982-1991"))
+text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
+```
+
+
+```{r}
+my.colours<- rev(terrain.colors(5))
+plot(NW.dataset, col=my.colours[findInterval(NW.dataset$SMR, brks,all.inside=TRUE)])
+legend("right", legend=leglabs(brks),fill=my.colours, bty="n",cex=1)
+title(main=paste("Standardized Mortality Rate (SMR) during 1982-1991"))
+text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
+```
+
+## 2. Finding Spatial Neighbours
+
+We define neighbors those regions which share a part of the border:
+
+```{r}
+xxnb <- poly2nb(NW.dataset)
+plot(NW.dataset, border="grey")
+plot(xxnb, coordinates(NW.dataset), add=TRUE, col="blue")
+```
+
+```{r}
+summary.nb(xxnb)
+```
+
+```{r}
+cards <- card(xxnb) #Cardinalities of neighbours lists
+
+maxconts <- which(cards == max(cards))[1] #Select the first region
+NW.dataset$NAME[maxconts]
+```
+
+```{r}
+fg <- rep("grey", length(cards))
+fg[maxconts] <- "red"
+fg[xxnb[[maxconts]]] <- "green"
+plot(NW.dataset, col=fg)
+text(coordinates(NW.dataset), label=NW.dataset$NAME,cex=0.5)
+title(main="Region with largest number of contiguities")
+```
+
+
+# After establishing the neighbours we look for the weigths
+
+standardised weigths
+```{r}
+weight.object<-nb2listw(xxnb, glist=NULL, style="W", zero.policy=TRUE) #Spatial weights for neighbours li# weight.object$weights
+summary(unlist(weight.object$weights))
+
+weight.list = weight.object$weights
+head(weight.list)
+```
+
+# TEST for autocorrelation ( o spatial correlation ??)
+
+<!-- preciso ? -->
+```{r}
+sids.moran<-moran.test(NW.dataset$SMR, weight.object) #Standardazed weights
+sids.moran
+```
+<!-- o approssimato? via approccio montecarlo -->
+```{r}
+set.seed(1234)
+sids.moran.mc<-moran.mc(NW.dataset$SMR, listw=weight.object, nsim=5000)
+sids.moran.mc
+```
+
+```{r}
+st.SMR<-(NW.dataset$SMR-mean(NW.dataset$SMR))/sd(NW.dataset$SMR)
+xx<-moran.plot(st.SMR, weight.object ,labels=as.factor(NW.dataset$NAME), pch=19, main="Moran Plot")
+```
+
+```{r}
+label.colors<-c(rep("black",100))
+label.colors[NW.dataset$NAME==130]<-"red"
+plot(NW.dataset)
+text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4,col=label.colors)
+```
+
+```{r}
+sids.local.moran<-localmoran(NW.dataset$SMR , weight.object)
+dim(sids.local.moran)
+
+head(sids.local.moran)
+```
+
+```{r}
+dat<-data.frame(name = NW.dataset$NAME,sids.local.moran)
+colnames(dat)[6]="P-value"
+head(dat)
+```
+
+```{r}
+dat[order(dat$P),c(1,2,6)]
+```
+
+```{r}
+slot(NW.dataset,"data")<-cbind(slot(NW.dataset,"data"),sids.local.moran)
+
+```
+
+```{r}
+#Intervals
+l.inf<-round(min(NW.dataset$Ii),digits=2)
+l.sup<-round(max(NW.dataset$Ii),digits=2)
+
+I.b5<-findInterval(NW.dataset$Ii,c((l.inf-0.01),-1,-0.5,0.5,1.5,(l.sup+0.01)))
+breakI<-c((l.inf-0.1),-1,-0.5,0.5,1.5,(l.sup+0.1))
+pal.I<- c("yellow3", "orange2", "gray80", "grey60","grey15")
+
+# to look a list of colours of the R, use the function colours()
+
+#Colour assignment based on intervals
+plot(NW.dataset, col=pal.I[I.b5], main="Test statistic")
+text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
+legend("bottomright", legend=leglabs(breakI),fill=pal.I, cex=0.4)#, bty="n")
+```
+
+```{r}
+#Plot p value
+Ip.2<-findInterval(NW.dataset$'Pr(z != E(Ii))',c(0,0.05, 1))
+breaksp<-c(0,0.05, 1)
+pal.p<- gray.colors(2,0.4,0.95)
+plot(NW.dataset, col=pal.p[Ip.2], main="P-value")
+legend("bottomright", legend=leglabs(breaksp),fill=pal.p, cex=0.4, bty="n")
+text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
+```
+
+```{r}
+par(mfrow=c(1,1))
+plot(NW.dataset, col=my.colours[findInterval(NW.dataset$SMR, brks,all.inside=TRUE)])
+legend("right", legend=leglabs(brks),fill=my.colours, bty="n",cex=0.4)
+title(main=paste("Standardized Mortality Rate (SMR) during 1982-1991"))
+text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
+```
+
+
+2) If we consider that the number of cases of Larynx are a Poisson distribution, are data overdispersed?
+
+Poisson model without random effects. 
+
+IL MODELLO ODC è DA MODIFICARE ??
+
+```{R}
+laryx.Poisson<-paste(getwd(),"/laringe_poisson_model.odc",sep="")
+laryx.inits<-list(
+                list(alpha0=0),
+                list(alpha0=-5e-01),
+                list(alpha0=rnorm(1))
+            )
+
+path.winbugs<-paste("C:\\Users\\lofer\\WinBUGS14")
+mybugsdir<-"C:\\Users\\lofer\\OneDrive\\Documenti\\GitHub\\Epidemiology_2nd_Assignment\\temp"
+```
+
+#POISSON
+```{R}
+results.Poisson<-bugs(data=data, inits=laryx.inits,
+                  parameters.to.save = c("RR","alpha0"),
+                  model.file=laryx.Poisson, n.chains=3, n.iter=2000, n.burnin = 1000,
+                  bugs.directory=path.winbugs, debug=TRUE, codaPkg=FALSE, working.directory=mybugsdir)
+
+# print(results.Poisson)
+```
+
+3) Fit the SMR taking into account the over- dispersion of the data using a heterogeneity model,
+a spatial (CAR intrinsic) and the convolution model. Estimate the models using Bayesian
+inference (Gibbs Sampling). Use three chains of initial values.
+
+Heterogeneity model:unstructured overdispersion
+```{R}
+
+laryx.heterogenity<-paste(getwd(),"/laryx-heterogeneity-model.odc",sep="")
+laryx.inits.heterogenity<-list( list(tau.h = 1, alpha0 = 0, h= rep(0, lunghezza)),
+                                list(tau.h = 0.005, alpha0 = -0.5, h= rep(0, lunghezza)), 
+                                list(tau.h = 0.5, alpha0 = 1, h= rep(0, lunghezza)))
+
+results.heterogenity<-bugs(data=data,inits=laryx.inits.heterogenity, 
+                           parameters.to.save = c("alpha0","tau.h","sigma.h"),
+                           model.file=laryx.heterogenity,n.chains=3,n.iter=10000,n.burnin =1000,n.thin = 1,
+                           bugs.directory=path.winbugs,debug=TRUE,codaPkg=FALSE,working.directory=mybugsdir)
+```
+
+After revision of the convergence
+```{R}
+results.heterogenity<-bugs(data=data,inits=laryx.inits.heterogenity,
+                      parameters.to.save = c("alpha0","tau.h","sigma.h","resid","RR"),
+                      model.file=laryx.heterogenity,n.chains=3,n.iter=15000,n.burnin = 5000,n.thin = 10,
+                      bugs.directory=path.winbugs,debug=TRUE,codaPkg=FALSE,working.directory=mybugsdir)
+
+# print(results.heterogenity)
+```
+
+
+
+
+# RR = E_i exp( alpha0 + alpha1*X+s[i])
+# resid = exp(s[i])
+# se resid>1  vuol dir che s[i]>0 => il random effect aumenta il rischio
+# al contrario se resid<1 => s[i]<0 => il random effect diminuisce il rischio
+
+###Spatial model: structured overdispersion
+```{R}
+laryx.spatial<-paste(getwd(),"//laryx-spatial-model.odc",sep="")
+
+w.laryx<-nb2listw(xxnb, style="W", zero.policy=TRUE)
+attributes(w.laryx)
+
+adj<-unlist(w.laryx$neighbours)
+adj<-adj[adj!=0]
+data.spatial<-list(N=data$N,O=data$O,E=data$E,adj=adj,num=card(xxnb),sumNumNeigh=sum(card(xxnb)) )
+```
+
+```{R}
+laryx.inits.spatial<-list(
+  list(alpha0=0,s=rnorm(lunghezza),tau.s=exp(rnorm(1))),
+  list(alpha0=-5e-01,s=rnorm(lunghezza),tau.s=exp(rnorm(1))),
+  list(alpha0=rnorm(1),s=rnorm(lunghezza),tau.s=exp(rnorm(1))))
+
+results.spatial<-bugs(data=data.spatial,inits=laryx.inits.spatial,
+                           parameters.to.save = c("alpha0","tau.s","sigma.s"),
+                           model.file=laryx.spatial,n.chains=3,n.iter=5000,n.burnin = 0,n.thin=1,
+                           bugs.directory=path.winbugs,debug=TRUE,codaPkg=FALSE,working.directory=mybugsdir)
+```
+
+after convergence
+```{R}
+results.spatial<-bugs(data=data.spatial,inits=laryx.inits.spatial,
+                      parameters.to.save = c("RR","alpha0","tau.s","sigma.s","resid"),
+                      model.file=laryx.spatial,n.chains=3,n.iter=8000,n.burnin = 2000,n.thin=10,
+                      bugs.directory=path.winbugs,debug=TRUE,codaPkg=FALSE,working.directory=mybugsdir)
+```
+
+#### Convolution model:
+```{R}
+laryx.convolution<-paste(getwd(),"//laryx-convolution-model.odc",sep="")
+laryx.inits.convo<-list(
+  list(alpha0=0.00000E+00, h=rnorm(lunghezza),tau.h=exp(rnorm(1)), s=rnorm(lunghezza),tau.s=exp(rnorm(1))),
+  list(alpha0=-5.00000E-01,h=rnorm(lunghezza),tau.h=exp(rnorm(1)),s=rnorm(lunghezza),tau.s=exp(rnorm(1))),
+  list(alpha0=rnorm(1), h=rnorm(lunghezza),tau.h=exp(rnorm(1)),s=rnorm(lunghezza),tau.s=exp(rnorm(1))))
+
+results.convo<-bugs(data=data.spatial,inits=laryx.inits.convo,
+                    parameters.to.save = c("alpha0","tau.s","sigma.s","tau.h","sigma.h"),
+                    model.file=laryx.convolution,n.chains=3,n.iter=5000,n.burnin = 2000,n.thin=1,
+                    bugs.directory=path.winbugs,debug=TRUE,codaPkg=FALSE,working.directory=mybugsdir)
+```
+
+after convergence
+```{R}
+results.convo<-bugs(data=data.lips.spatial,inits=laryx.inits.convo,
+                      parameters.to.save = c("RR","alpha0","sigma.s","sigma.h","frac.spatial","s2.marginal",
+                                             "sigma2.h"),
+                      model.file=laryx.convolution,n.chains=3,n.iter=20000,n.burnin = 5000,n.thin=10,
+                      bugs.directory=path.winbugs,debug=TRUE,codaPkg=FALSE,working.directory=mybugsdir)
+
+```
+
+#VISTO CHE CI SONO DUE RANDOM EFFECT LA CONVERGENZA DEI PARAM è DIFFICILE, 
+#CI SONO TROPPI FATTORI. FORSE NON SONO NECESSARI ENTRMABI
+# PIU PARAMETRI DI QUANTI NE NECESSITI IL MODELLO => MEGLI NON USARE IL CONVOLUTIONAL
+# VISTO CHE IL BAYESIAN PROCEDURE NON RIESCE A TOARE UNA DISTRIBUZIONE A CUI CONVERGERE
+
+```{R}
+print(results.convo)$DIC
+
+results.convo$DIC
+
+print(results.spatial)
+print(results.heterogenity)
+```
+
+```{r}
+save.image("data.Rdata")
+```
