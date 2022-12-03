@@ -1,3 +1,0 @@
-RR	1	334
-alpha0	335	668
-deviance	669	1002

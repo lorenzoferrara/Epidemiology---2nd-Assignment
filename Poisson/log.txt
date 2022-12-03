@@ -1,0 +1,41 @@
+display(log)
+check(C:/Users/lofer/OneDrive/Documenti/GitHub/Epidemiology_2nd_Assignment/Poisson/laringe_poisson_model.odc.txt)
+model is syntactically correct
+data(C:/Users/lofer/OneDrive/Documenti/GitHub/Epidemiology_2nd_Assignment/Poisson/data.txt)
+data loaded
+compile(3)
+model compiled
+inits(1,C:/Users/lofer/OneDrive/Documenti/GitHub/Epidemiology_2nd_Assignment/Poisson/inits1.txt)
+chain initialized but other chain(s) contain uninitialized variables
+inits(2,C:/Users/lofer/OneDrive/Documenti/GitHub/Epidemiology_2nd_Assignment/Poisson/inits2.txt)
+chain initialized but other chain(s) contain uninitialized variables
+inits(3,C:/Users/lofer/OneDrive/Documenti/GitHub/Epidemiology_2nd_Assignment/Poisson/inits3.txt)
+model is initialized
+gen.inits()
+command #Bugs:gen.inits cannot be executed (is greyed out)
+thin.updater(3)
+update(334)
+set(alpha0)
+set(deviance)
+dic.set()
+update(334)
+coda(*,C:/Users/lofer/OneDrive/Documenti/GitHub/Epidemiology_2nd_Assignment/Poisson/coda)
+stats(*)
+
+Node statistics
+	 node	 mean	 sd	 MC error	2.5%	median	97.5%	start	sample
+	alpha0	-3.849E-4	0.03338	0.001031	-0.06431	4.754E-4	0.06547	335	1002
+	deviance	861.1	1.426	0.05197	860.2	860.6	865.1	335	1002
+dic.stats()
+
+DIC
+Dbar = post.mean of -2logL; Dhat = -2LogL at post.mean of stochastic nodes
+	Dbar	Dhat	pD	DIC	
+O	861.131	860.155	0.976	862.108	
+total	861.131	860.155	0.976	862.108	
+history(*,C:/Users/lofer/OneDrive/Documenti/GitHub/Epidemiology_2nd_Assignment/Poisson/history.odc)
+
+History
+
+save(C:/Users/lofer/OneDrive/Documenti/GitHub/Epidemiology_2nd_Assignment/Poisson/log.odc)
+save(C:/Users/lofer/OneDrive/Documenti/GitHub/Epidemiology_2nd_Assignment/Poisson/log.txt)
