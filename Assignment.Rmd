@@ -86,7 +86,7 @@ NW.dataset <- sp::SpatialPolygonsDataFrame(spatial.file, data = df )
 
 First we visualize the distribution of the data on an histogram
 ```{r}
-hist(SMR, xlab="Standardized Mortality Rate (SMR)", main="")
+# hist(SMR, xlab="Standardized Mortality Rate (SMR)", main="")
 ```
 
 ```{r}
@@ -123,31 +123,10 @@ plot(NW.dataset, border="grey")
 plot(xxnb, coordinates(NW.dataset), add=TRUE, col="blue")
 ```
 
-```{r}
-# summary.nb(xxnb)
-```
-
-```{r}
-# cards <- card(xxnb) #Cardinalities of neighbours lists
-# 
-# maxconts <- which(cards == max(cards))[1] #Select the first region
-# NW.dataset$NAME[maxconts]
-```
-
-```{r}
-# fg <- rep("grey", length(cards))
-# fg[maxconts] <- "red"
-# fg[xxnb[[maxconts]]] <- "green"
-# plot(NW.dataset, col=fg)
-# text(coordinates(NW.dataset), label=NW.dataset$NAME,cex=0.5)
-# title(main="Region with largest number of contiguities")
-```
-
 After establishing the neighbors we compute the weights (weights standardized by row). The weights corresponding to the first four regions are:
 ```{r}
 weight.object<-nb2listw(xxnb, glist=NULL, style="W", zero.policy=TRUE) 
 weight.list = weight.object$weights
-
 weight.list[1:4]
 ```
 
@@ -171,40 +150,40 @@ and the p-value is $p=0.000111$, therefore we refuse the null hypothesis.
 Both methods lead us to the conclusion that in this phenomenon spatial correlation is present. 
 
 ```{r}
-st.SMR<-(NW.dataset$SMR-mean(NW.dataset$SMR))/sd(NW.dataset$SMR)
-xx<-moran.plot(st.SMR, weight.object ,labels=as.factor(NW.dataset$NAME), pch=19, main="Moran Plot")
+# st.SMR<-(NW.dataset$SMR-mean(NW.dataset$SMR))/sd(NW.dataset$SMR)
+# xx<-moran.plot(st.SMR, weight.object ,labels=as.factor(NW.dataset$NAME), pch=19, main="Moran Plot")
 ```
 
 
 ```{r}
-sids.local.moran<-localmoran(NW.dataset$SMR , weight.object)
-
-dat<-data.frame(name = NW.dataset$NAME,sids.local.moran)
-colnames(dat)[6]="P-value"
-slot(NW.dataset,"data")<-cbind(slot(NW.dataset,"data"),sids.local.moran)
-
-#Intervals
-l.inf<-round(min(NW.dataset$Ii),digits=2)
-l.sup<-round(max(NW.dataset$Ii),digits=2)
-
-I.b5<-findInterval(NW.dataset$Ii,c((l.inf-0.01),-1,-0.5,0.5,1.5,(l.sup+0.01)))
-breakI<-c((l.inf-0.1),-1,-0.5,0.5,1.5,(l.sup+0.1))
-pal.I<- c("yellow3", "orange2", "gray80", "grey60","grey15")
-
-# to look a list of colours of the R, use the function colours()
-
-#Colour assignment based on intervals
-plot(NW.dataset, col=pal.I[I.b5], main="Test statistic")
-text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
-legend("bottomright", legend=leglabs(breakI),fill=pal.I, cex=0.4)#, bty="n")
+# sids.local.moran<-localmoran(NW.dataset$SMR , weight.object)
+# 
+# dat<-data.frame(name = NW.dataset$NAME,sids.local.moran)
+# colnames(dat)[6]="P-value"
+# slot(NW.dataset,"data")<-cbind(slot(NW.dataset,"data"),sids.local.moran)
+# 
+# #Intervals
+# l.inf<-round(min(NW.dataset$Ii),digits=2)
+# l.sup<-round(max(NW.dataset$Ii),digits=2)
+# 
+# I.b5<-findInterval(NW.dataset$Ii,c((l.inf-0.01),-1,-0.5,0.5,1.5,(l.sup+0.01)))
+# breakI<-c((l.inf-0.1),-1,-0.5,0.5,1.5,(l.sup+0.1))
+# pal.I<- c("yellow3", "orange2", "gray80", "grey60","grey15")
+# 
+# # to look a list of colours of the R, use the function colours()
+# 
+# #Colour assignment based on intervals
+# plot(NW.dataset, col=pal.I[I.b5], main="Test statistic")
+# text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
+# legend("bottomright", legend=leglabs(breakI),fill=pal.I, cex=0.4)#, bty="n")
 ```
 
 
 ```{r}
-plot(NW.dataset, col=my.colours[findInterval(NW.dataset$SMR, brks,all.inside=TRUE)])
-legend("right", legend=leglabs(brks),fill=my.colours, bty="n",cex=0.4)
-title(main=paste("Standardized Mortality Rate (SMR) during 1982-1991"))
-text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
+# plot(NW.dataset, col=my.colours[findInterval(NW.dataset$SMR, brks,all.inside=TRUE)])
+# legend("right", legend=leglabs(brks),fill=my.colours, bty="n",cex=0.4)
+# title(main=paste("Standardized Mortality Rate (SMR) during 1982-1991"))
+# text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
 ```
 
 
@@ -235,26 +214,19 @@ results.Poisson<-bugs(data=data, inits=laryx.inits,
 print(results.Poisson)
 ```
 
-AGGIUNGERE IMMAGINE PRESA DA WINBUGS DI TRACEPLLTS DELLA DEVIANCE
-
-
-
-
 If the Poisson model fits the data reasonably, we would expect the residual deviance to be roughly equal to the
 degrees of freedom (n-p).
 
 ```{r}
-# model.2 <- glm(SMR ~ , offset = log(pop), family = poisson(link = "log"), data = data)
-# summary(model.2)
+model.glm <- glm(O ~ 1, offset=E, family = quasipoisson(link = "log"), data=data)
+summary(model.glm)
 ```
 
-• That the residual deviance is so large suggests that the
-variation of the data exceeds the variation of a Poisson distributed variable, for which the variance equals the
-mean.
-
-
+But we can notice that the residual deviance is so large (3557.1) and the dispersion parameter is 304.254 which is more or less twice as much the degrees of freedom (d.o.f. = 143). Therefore we can conclude that the data are overdispersed.
 
 ### 3) Fit the SMR taking into account the over-dispersion of the data using a heterogeneity model, a spatial (CAR intrinsic) and the convolution model. Estimate the models using Bayesian inference (Gibbs Sampling). Use three chains of initial values.
+
+(for the sake of clarity we didn't show the estimates of $RR$, the Relative Risk)
 
 - Heterogeneity model: unstructured overdispersion
 ```{R hetero}
@@ -278,7 +250,6 @@ results.heterogenity<-bugs(data=data,inits=laryx.inits.heterogenity,
                            bugs.directory=path.winbugs,debug=debug_on,codaPkg=codaPkg_on,working.directory=mybugsdir)
 ```
 
-(for the sake of clarity we didn't show the estimates of RR)
 <!-- # RR = E_i exp( alpha0 + alpha1*X+s[i]) -->
 <!-- # resid = exp(s[i]) -->
 <!-- # se resid>1  vuol dir che s[i]>0 => il random effect aumenta il rischio -->
@@ -345,15 +316,29 @@ results.convo<-bugs(data=data.spatial,inits=laryx.inits.convo,
 
 To study the convergence we look both at the traceplots of the fitted parameters ( the 3 chains should stabilize after some time around the same value) and at the $\hat{R}$ coefficient of the parameters of the models (we'll assume that convergence is reached if $\hat{R} < 1.05$)
 
+To study the autocorrelation of the chain we look at the autocorrelation plots which WinBugs provide us.
+
 - Spatial:
 
 All the $\hat{R}$ coefficients are below 1.05, indeed using "prod( results.spatial$summary[,8] < 1.05 )" we get
 ```{r}
 prod( results.spatial$summary[,8] < 1.05 )
 ```
+
 and the traceplots are:
 
-![](./Immagine.png)
+![](./Spatial/alpha0.png)
+![](./Spatial/deviance.png)
+![](./Spatial/sigma_s.png)
+
+The autocorrelation plots are:
+
+![](./Spatial/corr_alpha0.png)
+
+![](./Spatial/corr_deviance.png)
+
+
+![](./Spatial/corr_sigma_s.png)
 
 - Heterogeneity:
 
@@ -364,7 +349,20 @@ prod( results.heterogenity$summary[,8] < 1.05 )
 
 and the traceplots are:
 
-![](./Immagine.png)
+![](./Hetero/alpha0.png)
+
+![](./Hetero/deviance.png)
+
+![](./Hetero/sigma_h.png)
+
+The autocorrelation plots are:
+
+![](./Hetero/corr_alpha0.png)
+
+![](./Hetero/corr_deviance.png)
+
+![](./Hetero/corr_sigma_h.png)
+
 
 - Convolutional:
 
@@ -375,10 +373,28 @@ prod( results.convo$summary[,8] < 1.05 )
 
 and the traceplots are:
 
-![](./Immagine.png)
+![](./Convo/alpha0.png)
 
-Since there are more than one random effect, the convergence of the parameters is harder to reach because the Monte Carlo Markov Chain struggles to find stable values to converge to. 
-So we'll avoid choosing the Convolutional model.
+![](./Convo/deviance.png)
+
+![](./Convo/sigma_s.png)
+
+![](./Convo/sigma_h.png)
+Since there are more than one random effect, the convergence of the parameters is harder to reach because the Monte Carlo Markov Chain struggles to find a stable value of sigma_h to converge to. 
+
+The autocorrelation plot is
+
+![](./Convo/corr_alpha0.png)
+
+![](./Convo/corr_deviance.png)
+
+
+![](./Convo/corr_sigma_s.png)
+
+
+![](./Convo/corr_sigma_h.png)
+
+We also have issues with the autocorrelation of the chains for sigma_h: even using a high value for the thin parameter we cannot find a chain with no or little autocorrelation. So we'll avoid choosing the Convolutional model.
 
 ```{R}
 df= data.frame( type=c("spatial", "heterogeneity", "convolutional"), 
@@ -386,7 +402,7 @@ df= data.frame( type=c("spatial", "heterogeneity", "convolutional"),
 df
 ```
 
-The DIC index is an estimate of expected predictive error, so we'll choose the model with the lowest DIC. The Spatial model and the Convolutional model are almost comparable, but even though the Convolutional has a slightly lower DIC we'll choose the Spatial, due to the considerations we have made above.
+The DIC index is an estimate of expected predictive error, so we'll choose the model with the lowest DIC. The Spatial model and the Convolutional model are almost comparable, but even though the Convolutional has a slightly lower DIC we'll choose the Spatial, due to the two considerations we have made above.
 
 ### 5.1) Using the model that better fit the data: Make a plot of the observed SMRs and Relative Risk estimated by the model (mean posterior of SMR), using the percentiles of the values. Compare them and discuss the differences.
 
@@ -414,6 +430,7 @@ text(coordinates(NW.dataset), label=round(RR.vector, digits=2),cex=0.5)
 # legend("bottom", legend=leglabs(names(brks)),fill=my.colours, bty="n",cex=0.83, title="Percentils")
 ```
 
+# MANCA SPIEGAZIONE
 
 ### 5.2) Make a plot showing the posterior probability of relative risk of the electoral districts that exceed 1. What do you observe? 
 
@@ -426,10 +443,12 @@ for (i in 1:lunghezza) {
 PV = round(prob.vector, digits = 2)
 
 brks <- round(quantile(PV, probs=seq(0,1,0.2)), digits=2)
-plot(NW.dataset, col=my.colours[findInterval(PV, brks,all.inside=TRUE)], main="PV")
+plot(NW.dataset, col=my.colours[findInterval(PV, brks,all.inside=TRUE)], main="prob(RR>1)")
 text(coordinates(NW.dataset), label=round(PV, digits=2),cex=0.5)
 legend("left", legend=leglabs(brks),fill=my.colours, bty="n",cex=0.83, title="")
 ```
+
+# MANCA SPIEGAZIONE
 
 ### 5.3) Make a plot showing the random effects for each districts (exponential scale) and another with the significance of this parameters. What do you observe?
 
@@ -441,24 +460,26 @@ The random effect is the spatial effect $s[i], \forall i\in\{1, .., 144\}$. If w
 resid=chosen.model$mean$resid
 random.effect = log(resid)
 
-my.colours <- c("yellow", "orange2", "red3", "brown", "black")
-
 layout(matrix(c(1,2,3), nrow = 1), widths = c(3,1.2,3))
-# layout(matrix(c(1,2), nrow = 1))
 
-brks <- round(quantile(random.effect, probs=seq(0,1,0.2)), digits=2)
+my.colours <- c("darkgreen", "green", "orange2", "red3")
+# brks <- round(quantile(random.effect, probs=seq(0,1,0.25)), digits=2)
+brks <- c(min(random.effect), -0.3, 0, 0.35, max(random.effect))
+# brks = c( seq(min(random.effect), 0, length=3), seq(0, max(random.effect), length=3) )
+# brks = round(brks[-3], digits=2)
 plot(NW.dataset, col=my.colours[findInterval(random.effect, brks,all.inside=TRUE)], main="Random Effect")
 text(coordinates(NW.dataset), label=round(random.effect, digits=2),cex=0.5)
 legend( "bottom", legend=leglabs(brks),fill=my.colours, bty="n",cex=0.8)
 
 plot.new()
-# legend("bottom", legend=leglabs(names(brks)),fill=my.colours, bty="n",cex=0.99)
 
-brks <- round(quantile(resid, probs=seq(0,1,0.2)), digits=2)
+# brks <- round(quantile(resid, probs=seq(0,1,0.25)), digits=2)
+brks = c(min(resid), 0.74, 1, 1.41, max(resid))
 plot(NW.dataset, col=my.colours[findInterval(resid, brks,all.inside=TRUE)], main="resid")
 text(coordinates(NW.dataset), label=round(resid, digits=2),cex=0.5)
-legend("bottom", legend=leglabs(names(brks)),fill=my.colours, bty="n",cex=0.8)
+legend("bottom", legend=leglabs(brks),fill=my.colours, bty="n",cex=0.8)
 ```
+
 
 
 ```{r}
