@@ -2,6 +2,7 @@
 title: "Assignment 2 Spatial Epidemiology"
 author: "Ferrara Lorenzo, Lucchini Marco"
 date: "29-11-2022"
+output: pdf_document
 ---
 
 ```{r include=FALSE}
@@ -82,14 +83,7 @@ spatial.file$geometry <- NULL #Eliminate this geographic information
 ```{r}
 df <- as.data.frame(spatial.file) #Create a data.frame
 NW.dataset <- sp::SpatialPolygonsDataFrame(spatial.file, data = df )
-```
 
-First we visualize the distribution of the data on an histogram
-```{r}
-# hist(SMR, xlab="Standardized Mortality Rate (SMR)", main="")
-```
-
-```{r}
 NW.dataset$SMR<-SMR
 NW.dataset$NAME = NW.dataset$poly_id
 ```
@@ -99,7 +93,7 @@ brks <- round(quantile(NW.dataset$SMR, probs=seq(0,1,0.2)), digits=2)
 my.colours <- c("yellow", "orange2", "red3", "brown", "black")
 ```
 
-and on the map of the regions: 
+First we visualize the distribution of the data on the map of the regions: 
 ```{r warning=FALSE}
 plot(NW.dataset, col=my.colours[findInterval(NW.dataset$SMR, brks,all.inside=TRUE)])
 legend("right", legend=leglabs(brks),fill=my.colours, bty="n",cex=0.99)
@@ -108,13 +102,6 @@ text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
 ```
 
 We notice that in the center of the district there's a cluster of regions with high values of SMR, which slowly lower as we get away from the center.
-
-<!-- #ALTRE PALETTE -->
-```{r}
-# my.colours<-gray.colors(5,0.95,0.2)
-# my.colours<- terrain.colors(5)
-# my.colours<- rev(terrain.colors(5))
-```
 
 Now we'll analyse the lattice structure of the data: let's consider neighbors those regions that share geographic limits:
 ```{r}
@@ -137,7 +124,7 @@ Now we can perform a Moran test to prove or disprove the presence of spatial aut
 sids.moran<-moran.test(NW.dataset$SMR, weight.object) #Standardazed weights
 sids.moran
 ```
-The I statistic is 0.313, which is quite different from the expected value (-0.0069), indeed the p-value is very low ($p=2.4\cdot10^{-10}$), so we refuse the null hypothesis.
+The I statistic is 0.313, which is quite different from the expected value (-0.0069), indeed the p-value is very low ($p=2.4\cdot10^{-10}$), so we reject the null hypothesis.
 
 - We also do it through a Monte Carlo approach:
 ```{r}
@@ -145,15 +132,17 @@ set.seed(1234)
 sids.moran.mc<-moran.mc(NW.dataset$SMR, listw=weight.object, nsim=9000)
 sids.moran.mc
 ```
-and the p-value is $p=0.000111$, therefore we refuse the null hypothesis.
+and the p-value is $p=0.000111$, therefore also in this case we reject the null hypothesis.
 
-Both methods lead us to the conclusion that in this phenomenon spatial correlation is present. 
+Both methods lead us to the conclusion that spatial correlation is present. 
 
 ```{r}
-# st.SMR<-(NW.dataset$SMR-mean(NW.dataset$SMR))/sd(NW.dataset$SMR)
+st.SMR<-(NW.dataset$SMR-mean(NW.dataset$SMR))/sd(NW.dataset$SMR)
 # xx<-moran.plot(st.SMR, weight.object ,labels=as.factor(NW.dataset$NAME), pch=19, main="Moran Plot")
 ```
 
+
+<!-- We also want to view the $I_i$ statistic of the local Moran tests. So we create the intervals for $I_i$: [lowest $I_i$ value, -1], [-1,-0.5], [-0.5,0.5], [0.5, 1.5], [1.5, highest $I_i$ value]. The first two intervals are low $I_i$ values, the third interval corresponds to values close to 0, and the last two intervals are high $I_i$ values. -->
 
 ```{r}
 # sids.local.moran<-localmoran(NW.dataset$SMR , weight.object)
@@ -175,43 +164,36 @@ Both methods lead us to the conclusion that in this phenomenon spatial correlati
 # #Colour assignment based on intervals
 # plot(NW.dataset, col=pal.I[I.b5], main="Test statistic")
 # text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
-# legend("bottomright", legend=leglabs(breakI),fill=pal.I, cex=0.4)#, bty="n")
+# legend("right", legend=leglabs(breakI),fill=pal.I, cex=0.99)#, bty="n")
 ```
 
-
-```{r}
-# plot(NW.dataset, col=my.colours[findInterval(NW.dataset$SMR, brks,all.inside=TRUE)])
-# legend("right", legend=leglabs(brks),fill=my.colours, bty="n",cex=0.4)
-# title(main=paste("Standardized Mortality Rate (SMR) during 1982-1991"))
-# text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
-```
-
+<!-- We can confirm the presence of a cluster of very high values in the center and we notice a cluster of quite high values in the north, which might indicate  -->
 
 ### 2) If we consider that the number of cases of Larynx are a Poisson distribution, are data overdispersed?
 
-We try to fit the data with a Poisson model without random effects. 
+We try to fit the data with a Poisson model: 
 
 ```{R poisson 1}
-laryx.Poisson<-paste(getwd(),"/laringe_poisson_model.odc",sep="")
-laryx.inits<-list(
-                list(alpha0=0),
-                list(alpha0=-5e-01),
-                list(alpha0=rnorm(1))
-            )
-
-path.winbugs<-paste("C:\\Users\\lofer\\WinBUGS14")
+# laryx.Poisson<-paste(getwd(),"/laringe_poisson_model.odc",sep="")
+# laryx.inits<-list(
+#                 list(alpha0=0),
+#                 list(alpha0=-5e-01),
+#                 list(alpha0=rnorm(1))
+#             )
+# 
+# path.winbugs<-paste("C:\\Users\\lofer\\WinBUGS14")
 ```
 
 ```{R poisson 2}
-mybugsdir<-"C:\\Users\\lofer\\OneDrive\\Documenti\\GitHub\\Epidemiology_2nd_Assignment\\Poisson"
-
-results.Poisson<-bugs(data=data, inits=laryx.inits,
-                  # parameters.to.save = c("RR","alpha0"),
-                  parameters.to.save = c("alpha0"),
-                  model.file=laryx.Poisson, n.chains=3, n.iter=2000, n.burnin = 1000,
-                  bugs.directory=path.winbugs, debug=debug_on, codaPkg=codaPkg_on, working.directory=mybugsdir)
-
-print(results.Poisson)
+# mybugsdir<-"C:\\Users\\lofer\\OneDrive\\Documenti\\GitHub\\Epidemiology_2nd_Assignment\\Poisson"
+# 
+# results.Poisson<-bugs(data=data, inits=laryx.inits,
+#                   # parameters.to.save = c("RR","alpha0"),
+#                   parameters.to.save = c("alpha0"),
+#                   model.file=laryx.Poisson, n.chains=3, n.iter=2000, n.burnin = 1000,
+#                   bugs.directory=path.winbugs, debug=debug_on, codaPkg=codaPkg_on, working.directory=mybugsdir)
+# 
+# print(results.Poisson)
 ```
 
 If the Poisson model fits the data reasonably, we would expect the residual deviance to be roughly equal to the
@@ -229,8 +211,10 @@ But we can notice that the residual deviance is so large (3557.1) and the disper
 (for the sake of clarity we didn't show the estimates of $RR$, the Relative Risk)
 
 - Heterogeneity model: unstructured overdispersion
-```{R hetero}
+```{R cache=T}
+path.winbugs = "C:\\Users\\lofer\\WinBUGS14"
 mybugsdir<-"C:\\Users\\lofer\\OneDrive\\Documenti\\GitHub\\Epidemiology_2nd_Assignment\\Hetero"
+# mybugsdir<- paste(getwd(), "/Hetero", sep="")
 
 laryx.heterogenity<-paste(getwd(),"/laryx-heterogeneity-model.odc",sep="")
 laryx.inits.heterogenity<-list( list(tau.h = 1, alpha0 = 0, h= rep(0, lunghezza)),
@@ -266,7 +250,7 @@ adj<-adj[adj!=0]
 data.spatial<-list(N=data$N,O=data$O,E=data$E,adj=adj,num=card(xxnb),sumNumNeigh=sum(card(xxnb)) )
 ```
 
-```{R spatial 2}
+```{R spatial 2, cache=T}
 
 mybugsdir<-"C:\\Users\\lofer\\OneDrive\\Documenti\\GitHub\\Epidemiology_2nd_Assignment\\Spatial"
 
@@ -289,7 +273,7 @@ results.spatial<-bugs(data=data.spatial,inits=laryx.inits.spatial,
 ```
 
 - Convolution model: we create a model which takes into account both a structured (spatial) overdispersion and an unstructured (heterogeneity) one
-```{R convolutional}
+```{R convolutional, cache=T}
 
 mybugsdir<-"C:\\Users\\lofer\\OneDrive\\Documenti\\GitHub\\Epidemiology_2nd_Assignment\\Convo"
 
@@ -320,9 +304,9 @@ To study the autocorrelation of the chain we look at the autocorrelation plots w
 
 - Spatial:
 
-All the $\hat{R}$ coefficients are below 1.05, indeed using "prod( results.spatial$summary[,8] < 1.05 )" we get
+All the $\hat{R}$ coefficients are below 1.05, indeed the maximum value we get is:
 ```{r}
-prod( results.spatial$summary[,8] < 1.05 )
+max( results.spatial$summary[,8] )
 ```
 
 and the traceplots are:
@@ -342,9 +326,9 @@ The autocorrelation plots are:
 
 - Heterogeneity:
 
-All the $\hat{R}$ coefficients are below 1.05, indeed using "prod( results.spatial$summary[,8] < 1.05 )" we get
+All the $\hat{R}$ coefficients are below 1.05, indeed the maximum value we get is:
 ```{r}
-prod( results.heterogenity$summary[,8] < 1.05 )
+max( results.heterogenity$summary[,8] )
 ```
 
 and the traceplots are:
@@ -366,9 +350,9 @@ The autocorrelation plots are:
 
 - Convolutional:
 
-All the $\hat{R}$ coefficients are below 1.05, indeed using "prod( results.spatial$summary[,8] < 1.05 )" we get
+All the $\hat{R}$ coefficients are below 1.05, indeed the maximum value we get is:
 ```{r}
-prod( results.convo$summary[,8] < 1.05 )
+max( results.convo$summary[,8] )
 ```
 
 and the traceplots are:
@@ -380,6 +364,7 @@ and the traceplots are:
 ![](./Convo/sigma_s.png)
 
 ![](./Convo/sigma_h.png)
+
 Since there are more than one random effect, the convergence of the parameters is harder to reach because the Monte Carlo Markov Chain struggles to find a stable value of sigma_h to converge to. 
 
 The autocorrelation plot is
@@ -396,9 +381,11 @@ The autocorrelation plot is
 
 We also have issues with the autocorrelation of the chains for sigma_h: even using a high value for the thin parameter we cannot find a chain with no or little autocorrelation. So we'll avoid choosing the Convolutional model.
 
+We can also evaluate the DIC (Deviance Information Criterion):
 ```{R}
 df= data.frame( type=c("spatial", "heterogeneity", "convolutional"), 
                 DIC = c(results.spatial$DIC, results.heterogenity$DIC, results.convo$DIC) )
+rownames(df)=rep("", 3)
 df
 ```
 
@@ -430,7 +417,28 @@ text(coordinates(NW.dataset), label=round(RR.vector, digits=2),cex=0.5)
 # legend("bottom", legend=leglabs(names(brks)),fill=my.colours, bty="n",cex=0.83, title="Percentils")
 ```
 
-# MANCA SPIEGAZIONE
+```{r}
+my.colours <- c("yellow", "orange2", "red3", "brown", "black")
+brks <- round(quantile(NW.dataset$SMR, probs=seq(0,1,0.2)), digits=2)
+
+layout(matrix(c(1,2,3), nrow = 1), widths = c(3,1.7,3))
+
+plot(NW.dataset, col=my.colours[findInterval(SMR, brks,all.inside=TRUE)], main="SMR")
+text(coordinates(NW.dataset), label=round(SMR, digits=2),cex=0.5)
+# legend("bottom", legend=leglabs(names(brks)),fill=my.colours, bty="n",cex=0.83, title="Percentils")
+
+plot.new()
+legend("center", legend=leglabs(names(brks)),fill=my.colours, bty="n",cex=1, title="Percentils")
+
+# brks <- round(quantile(RR.vector, probs=seq(0,1,0.2)), digits=2)
+plot(NW.dataset, col=my.colours[findInterval(RR.vector, brks,all.inside=TRUE)], main="RR")
+text(coordinates(NW.dataset), label=round(RR.vector, digits=2),cex=0.5)
+# legend("bottom", legend=leglabs(names(brks)),fill=my.colours, bty="n",cex=0.83, title="Percentils")
+```
+
+The values of RR estimated by the model follow a radial pattern - with higher values in the center and gradually lower values far from the center. Its pattern is smoother than the one followed by the observed values of SMR, which present many low-value hotspots in the center and some high-value clusters in the north. 
+
+We could say that the SMR has two main clusters (center and north), of which only one is recognized by the model (center), but from a qualitative point of view the chosen model can describe well the phenomenon, even though just in a rough way and not so in detail. 
 
 ### 5.2) Make a plot showing the posterior probability of relative risk of the electoral districts that exceed 1. What do you observe? 
 
