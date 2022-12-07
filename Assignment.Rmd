@@ -31,22 +31,6 @@ library(spatialreg)
 
 ### 1) Perform an exploratory analysis to study the possible spatial correlation of the larynx incidence (Standardized Mobility Ratio, SMR) (considering neighbors those regions that share geographic limits and the matrix of weights as the matrix standardized by rows)
 
-The data available to as are the following:
-* $O$: Number of observed events
-* $E$: Number of Expected events
-In the observed regions 0 to 27 events were registered and the median number of observations is 5. The expected value of the cases was between 0.710 and 11.700 with median 6.365.
-
-The two distribution of the data are the following:
-
-```{r}
-hist(data$O, breaks = 25,  col=rgb(1,0,0,0.5), xlab="Number of events",
-     ylab="Frequency", main="Distribution of events", probability = FALSE)
-hist(data$E, breaks = 12, probability = FALSE, col = rgb(0,0,1,0.5), add=T)
-legend("topright", legend=c("Observed","Expected"), col=c(rgb(1,0,0,0.5),
-                                                      rgb(0,0,1,0.5)), pt.cex=2, pch=15 )
-```
-
-
 ```{r}
 rm(list=ls())
 
@@ -86,6 +70,20 @@ debug_on=F
 codaPkg_on=F
 ```
 
+The data available to as are the following:
+
+* $O$: Number of observed events
+* $E$: Number of Expected events
+
+In the observed regions 0 to 27 events were registered and the median number of observations is 5. The expected value of the cases was between 0.710 and 11.700 with median 6.365. The two distribution of the data are the following:
+
+```{r out.width="70%"}
+hist(data$O, breaks = 25,  col=rgb(1,0,0,0.5), xlab="Number of events",
+     ylab="Frequency", main="Distribution of events", probability = FALSE)
+hist(data$E, breaks = 12, probability = FALSE, col = rgb(0,0,1,0.5), add=T)
+legend("topright", legend=c("Observed","Expected"), col=c(rgb(1,0,0,0.5), rgb(0,0,1,0.5)), pt.cex=2, pch=15 )
+```
+
 ```{r}
 shp.file <- read_sf(dsn = ".", layer = "NWEngland")
 spatial.file <- sf::as_Spatial(shp.file)
@@ -105,8 +103,8 @@ brks <- round(quantile(NW.dataset$SMR, probs=seq(0,1,0.2)), digits=2)
 my.colours <- c("yellow", "orange2", "red3", "brown", "black")
 ```
 
-First we visualize the distribution of the data on the map of the regions: 
-```{r warning=FALSE}
+We also visualize the distribution of the data on the map of the regions: 
+```{r warning=FALSE, out.width="70%"}
 plot(NW.dataset, col=my.colours[findInterval(NW.dataset$SMR, brks,all.inside=TRUE)])
 legend("right", legend=leglabs(brks),fill=my.colours, bty="n",cex=0.99)
 title(main=paste("Standardized Mortality Rate (SMR) during 1982-1991"))
@@ -116,7 +114,7 @@ text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
 We notice that in the center of the district there's a cluster of regions with high values of SMR, which slowly lower as we get away from the center.
 
 Now we'll analyse the lattice structure of the data: let's consider neighbors those regions that share geographic limits:
-```{r}
+```{r out.width="90%"}
 xxnb <- poly2nb(NW.dataset)
 plot(NW.dataset, border="grey")
 plot(xxnb, coordinates(NW.dataset), add=TRUE, col="blue")
@@ -148,39 +146,6 @@ and the p-value is $p=0.000111$, therefore also in this case we reject the null 
 
 Both methods lead us to the conclusion that spatial correlation is present. 
 
-```{r}
-st.SMR<-(NW.dataset$SMR-mean(NW.dataset$SMR))/sd(NW.dataset$SMR)
-# xx<-moran.plot(st.SMR, weight.object ,labels=as.factor(NW.dataset$NAME), pch=19, main="Moran Plot")
-```
-
-
-<!-- We also want to view the $I_i$ statistic of the local Moran tests. So we create the intervals for $I_i$: [lowest $I_i$ value, -1], [-1,-0.5], [-0.5,0.5], [0.5, 1.5], [1.5, highest $I_i$ value]. The first two intervals are low $I_i$ values, the third interval corresponds to values close to 0, and the last two intervals are high $I_i$ values. -->
-
-```{r}
-# sids.local.moran<-localmoran(NW.dataset$SMR , weight.object)
-# 
-# dat<-data.frame(name = NW.dataset$NAME,sids.local.moran)
-# colnames(dat)[6]="P-value"
-# slot(NW.dataset,"data")<-cbind(slot(NW.dataset,"data"),sids.local.moran)
-# 
-# #Intervals
-# l.inf<-round(min(NW.dataset$Ii),digits=2)
-# l.sup<-round(max(NW.dataset$Ii),digits=2)
-# 
-# I.b5<-findInterval(NW.dataset$Ii,c((l.inf-0.01),-1,-0.5,0.5,1.5,(l.sup+0.01)))
-# breakI<-c((l.inf-0.1),-1,-0.5,0.5,1.5,(l.sup+0.1))
-# pal.I<- c("yellow3", "orange2", "gray80", "grey60","grey15")
-# 
-# # to look a list of colours of the R, use the function colours()
-# 
-# #Colour assignment based on intervals
-# plot(NW.dataset, col=pal.I[I.b5], main="Test statistic")
-# text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
-# legend("right", legend=leglabs(breakI),fill=pal.I, cex=0.99)#, bty="n")
-```
-
-<!-- We can confirm the presence of a cluster of very high values in the center and we notice a cluster of quite high values in the north, which might indicate  -->
-
 ### 2) If we consider that the number of cases of Larynx are a Poisson distribution, are data overdispersed?
 
 We try to fit the data with a Poisson model: 
@@ -194,9 +159,7 @@ We try to fit the data with a Poisson model:
 #             )
 # 
 # path.winbugs<-paste("C:\\Users\\lofer\\WinBUGS14")
-```
-
-```{R poisson 2}
+ 
 # mybugsdir<-"C:\\Users\\lofer\\OneDrive\\Documenti\\GitHub\\Epidemiology_2nd_Assignment\\Poisson"
 # 
 # results.Poisson<-bugs(data=data, inits=laryx.inits,
@@ -217,8 +180,6 @@ summary(model.glm)
 ```
 
 But we can notice that the residual deviance is very large (3557.1) and that the dispersion parameter is 304.254. Therefore we can conclude that the data are overdispersed.
-
- <!-- (d.o.f. = 143) -->
 
 ### 3) Fit the SMR taking into account the over-dispersion of the data using a heterogeneity model, a spatial (CAR intrinsic) and the convolution model. Estimate the models using Bayesian inference (Gibbs Sampling). Use three chains of initial values.
 
@@ -247,11 +208,6 @@ results.heterogenity<-bugs(data=data,inits=laryx.inits.heterogenity,
                            model.file=laryx.heterogenity,n.chains=3,n.iter=10000,n.burnin=1000,n.thin = 10,
                            bugs.directory=path.winbugs,debug=debug_on,codaPkg=codaPkg_on,working.directory=mybugsdir)
 ```
-
-<!-- # RR = E_i exp( alpha0 + alpha1*X+s[i]) -->
-<!-- # resid = exp(s[i]) -->
-<!-- # se resid>1  vuol dir che s[i]>0 => il random effect aumenta il rischio -->
-<!-- # al contrario se resid<1 => s[i]<0 => il random effect diminuisce il rischio -->
 
 - Spatial model: we model a structured overdispersion, using the spatial structure we have created above (the neighbors, the weights and the corresponding adjacency matrix)
 ```{R spatial 1}
@@ -327,17 +283,9 @@ and the traceplots are:
 
 ![](./Spatial/AA_parameters.png)
 
-<!-- ![](./Spatial/alpha0.png) -->
-<!-- ![](./Spatial/deviance.png) -->
-<!-- ![](./Spatial/sigma_s.png) -->
-
 The autocorrelation plots are:
 
 ![](./Spatial/AA_correlations.png)
-
-<!-- ![](./Spatial/corr_alpha0.png) -->
-<!-- ![](./Spatial/corr_deviance.png) -->
-<!-- ![](./Spatial/corr_sigma_s.png) -->
 
 - Heterogeneity:
 
@@ -350,17 +298,9 @@ and the traceplots are:
 
 ![](./Hetero/AA_parameters.png)
 
-<!-- ![](./Hetero/alpha0.png) -->
-<!-- ![](./Hetero/deviance.png) -->
-<!-- ![](./Hetero/sigma_h.png) -->
-
 The autocorrelation plots are:
 
 ![](./Spatial/AA_correlations.png)
-
-<!-- ![](./Hetero/corr_alpha0.png) -->
-<!-- ![](./Hetero/corr_deviance.png) -->
-<!-- ![](./Hetero/corr_sigma_h.png) -->
 
 - Convolutional:
 
@@ -373,23 +313,13 @@ and the traceplots are:
 
 ![](./Convo/AA_parameters.png)
 
-<!-- ![](./Convo/alpha0.png) -->
-<!-- ![](./Convo/deviance.png) -->
-<!-- ![](./Convo/sigma_s.png) -->
-<!-- ![](./Convo/sigma_h.png) -->
-
 Since there are more than one random effect, the convergence of the parameters is harder to reach because the Monte Carlo Markov Chain struggles to find a stable value of sigma_h to converge to. 
 
 The autocorrelation plot is
 
 ![](./Convo/AA_correlations.png)
 
-<!-- ![](./Convo/corr_alpha0.png) -->
-<!-- ![](./Convo/corr_deviance.png) -->
-<!-- ![](./Convo/corr_sigma_s.png) -->
-<!-- ![](./Convo/corr_sigma_h.png) -->
-
-We also have issues with the autocorrelation of the chains for sigma_h: even using a high value for the thin parameter we cannot find a chain with no or little autocorrelation. So we'll avoid choosing the Convolutional model.
+We also have issues with the autocorrelation of the chains for sigma_h: even using a high value for the thin parameter it's difficult to find a chain with no or little autocorrelation. So we'll avoid choosing the Convolutional model.
 
 We can also evaluate the DIC (Deviance Information Criterion):
 ```{R}
@@ -465,13 +395,15 @@ text(coordinates(NW.dataset), label=round(PV, digits=2),cex=0.5)
 legend("left", legend=leglabs(brks),fill=my.colours, bty="n",cex=0.83, title="")
 ```
 
-# MANCA SPIEGAZIONE
+Let's analyse the meaning of the SMR: a ratio greater than 1 indicates that more mortality has occurred with respect to the expected values, which means that we can state with pretty high probability that the black and brown regions have an increase in the value of the observed cases ($p>46\%$ for the brown regions and $p>80\%$ for the black ones).
+
+We may suppose the presence of an underlying phenomenon which is causing this increase of the mortality due to larynx cancer. It may be linked to some change of the environmental-working conditions in the areas under investigation.
 
 ### 5.3) Make a plot showing the random effects for each districts (exponential scale) and another with the significance of this parameters. What do you observe?
 
-The random effect is the spatial effect $s[i], \forall i\in\{1, .., 144\}$. If we want to see it in exponential scale, we'll use $resid[i]=e^{s[i]}$
-#il random effect dovrebbe essere s[i]  o quello che è
-#la significance è il resid
+The random effect is the spatial effect $s[i], \forall i\in\{1, .., 144\}$. If we want to see it in exponential scale, we'll use $resid[i]=e^{s[i]}$.
+
+Notice that the formula is $RR[i] = e^{\alpha_0 + s[i]} = e^{\alpha_0} \cdot e^{s[i]}$ and the multiplying factor is exactly $e^{s[i]}$.
 
 ```{r}
 resid=chosen.model$mean$resid
@@ -496,6 +428,11 @@ plot(NW.dataset, col=my.colours[findInterval(resid, brks,all.inside=TRUE)], main
 text(coordinates(NW.dataset), label=round(resid, digits=2),cex=0.5)
 legend("bottom", legend=leglabs(brks),fill=my.colours, bty="n",cex=0.8)
 ```
+
+These plots show how the spatial effect affects the values of the RR estimated by the model: 
+
+- In the regions where $s[i]>0$, so $e^{s[i]}>1$, RR is positively influenced by the spatial effect, leading to a higher number of deaths than expected
+- Viceversa in the regions where $s[i]<0$, so $e^{s[i]}<1$, RR is negatively influenced by the spatial effect, leading to a lower number of deaths than expected.
 
 
 
