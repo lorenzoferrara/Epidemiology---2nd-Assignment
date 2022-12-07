@@ -7,7 +7,7 @@ output: pdf_document
 
 ```{r include=FALSE}
 knitr::opts_chunk$set( echo=F )
-knitr::opts_chunk$set(out.width = '70%')
+# knitr::opts_chunk$set(out.width = '70%')
 knitr::opts_chunk$set(fig.align = "center")
 knitr::opts_chunk$set(tidy =TRUE)
 knitr::opts_chunk$set(message = FALSE)
@@ -31,9 +31,21 @@ library(spatialreg)
 
 ### 1) Perform an exploratory analysis to study the possible spatial correlation of the larynx incidence (Standardized Mobility Ratio, SMR) (considering neighbors those regions that share geographic limits and the matrix of weights as the matrix standardized by rows)
 
-<!-- NELLA EXPLORATRY ANALISYS MAGAR DEVO DIRE IL NUMER DI REGIONI, IL NUMERO DI LINKS, IL NUMERO TOTALE DI VICINI, IL IPO DI LINK USATO E DI WEIGHTS USATO. -->
-<!-- USA LA FUNZIONE SUMARY PE FARTI VENIRE DELLE IDEE -->
-<!-- summary(oggetto xxnb) o un summary simile -->
+The data available to as are the following:
+* $O$: Number of observed events
+* $E$: Number of Expected events
+In the observed regions 0 to 27 events were registered and the median number of observations is 5. The expected value of the cases was between 0.710 and 11.700 with median 6.365.
+
+The two distribution of the data are the following:
+
+```{r}
+hist(data$O, breaks = 25,  col=rgb(1,0,0,0.5), xlab="Number of events",
+     ylab="Frequency", main="Distribution of events", probability = FALSE)
+hist(data$E, breaks = 12, probability = FALSE, col = rgb(0,0,1,0.5), add=T)
+legend("topright", legend=c("Observed","Expected"), col=c(rgb(1,0,0,0.5),
+                                                      rgb(0,0,1,0.5)), pt.cex=2, pch=15 )
+```
+
 
 ```{r}
 rm(list=ls())
@@ -197,14 +209,16 @@ We try to fit the data with a Poisson model:
 ```
 
 If the Poisson model fits the data reasonably, we would expect the residual deviance to be roughly equal to the
-degrees of freedom (n-p).
+degrees of freedom ($n-p=143$).
 
 ```{r}
 model.glm <- glm(O ~ 1, offset=E, family = quasipoisson(link = "log"), data=data)
 summary(model.glm)
 ```
 
-But we can notice that the residual deviance is so large (3557.1) and the dispersion parameter is 304.254 which is more or less twice as much the degrees of freedom (d.o.f. = 143). Therefore we can conclude that the data are overdispersed.
+But we can notice that the residual deviance is very large (3557.1) and that the dispersion parameter is 304.254. Therefore we can conclude that the data are overdispersed.
+
+ <!-- (d.o.f. = 143) -->
 
 ### 3) Fit the SMR taking into account the over-dispersion of the data using a heterogeneity model, a spatial (CAR intrinsic) and the convolution model. Estimate the models using Bayesian inference (Gibbs Sampling). Use three chains of initial values.
 
@@ -298,9 +312,9 @@ results.convo<-bugs(data=data.spatial,inits=laryx.inits.convo,
 
 ### 4) Check the convergence and study the autocorrelation of the chain. Decide which model fit better the data.
 
-To study the convergence we look both at the traceplots of the fitted parameters ( the 3 chains should stabilize after some time around the same value) and at the $\hat{R}$ coefficient of the parameters of the models (we'll assume that convergence is reached if $\hat{R} < 1.05$)
+To study the convergence we look both at the traceplots of the fitted parameters (the 3 chains should stabilize after some time around the same value) and at the $\hat{R}$ coefficient of the parameters of the models (we'll assume that convergence is reached if $\hat{R} < 1.05$)
 
-To study the autocorrelation of the chain we look at the autocorrelation plots which WinBugs provide us.
+To study the autocorrelation of the chain we look at the autocorrelation plots which WinBugs gives us.
 
 - Spatial:
 
@@ -311,18 +325,19 @@ max( results.spatial$summary[,8] )
 
 and the traceplots are:
 
-![](./Spatial/alpha0.png)
-![](./Spatial/deviance.png)
-![](./Spatial/sigma_s.png)
+![](./Spatial/AA_parameters.png)
+
+<!-- ![](./Spatial/alpha0.png) -->
+<!-- ![](./Spatial/deviance.png) -->
+<!-- ![](./Spatial/sigma_s.png) -->
 
 The autocorrelation plots are:
 
-![](./Spatial/corr_alpha0.png)
+![](./Spatial/AA_correlations.png)
 
-![](./Spatial/corr_deviance.png)
-
-
-![](./Spatial/corr_sigma_s.png)
+<!-- ![](./Spatial/corr_alpha0.png) -->
+<!-- ![](./Spatial/corr_deviance.png) -->
+<!-- ![](./Spatial/corr_sigma_s.png) -->
 
 - Heterogeneity:
 
@@ -333,20 +348,19 @@ max( results.heterogenity$summary[,8] )
 
 and the traceplots are:
 
-![](./Hetero/alpha0.png)
+![](./Hetero/AA_parameters.png)
 
-![](./Hetero/deviance.png)
-
-![](./Hetero/sigma_h.png)
+<!-- ![](./Hetero/alpha0.png) -->
+<!-- ![](./Hetero/deviance.png) -->
+<!-- ![](./Hetero/sigma_h.png) -->
 
 The autocorrelation plots are:
 
-![](./Hetero/corr_alpha0.png)
+![](./Spatial/AA_correlations.png)
 
-![](./Hetero/corr_deviance.png)
-
-![](./Hetero/corr_sigma_h.png)
-
+<!-- ![](./Hetero/corr_alpha0.png) -->
+<!-- ![](./Hetero/corr_deviance.png) -->
+<!-- ![](./Hetero/corr_sigma_h.png) -->
 
 - Convolutional:
 
@@ -357,27 +371,23 @@ max( results.convo$summary[,8] )
 
 and the traceplots are:
 
-![](./Convo/alpha0.png)
+![](./Convo/AA_parameters.png)
 
-![](./Convo/deviance.png)
-
-![](./Convo/sigma_s.png)
-
-![](./Convo/sigma_h.png)
+<!-- ![](./Convo/alpha0.png) -->
+<!-- ![](./Convo/deviance.png) -->
+<!-- ![](./Convo/sigma_s.png) -->
+<!-- ![](./Convo/sigma_h.png) -->
 
 Since there are more than one random effect, the convergence of the parameters is harder to reach because the Monte Carlo Markov Chain struggles to find a stable value of sigma_h to converge to. 
 
 The autocorrelation plot is
 
-![](./Convo/corr_alpha0.png)
+![](./Convo/AA_correlations.png)
 
-![](./Convo/corr_deviance.png)
-
-
-![](./Convo/corr_sigma_s.png)
-
-
-![](./Convo/corr_sigma_h.png)
+<!-- ![](./Convo/corr_alpha0.png) -->
+<!-- ![](./Convo/corr_deviance.png) -->
+<!-- ![](./Convo/corr_sigma_s.png) -->
+<!-- ![](./Convo/corr_sigma_h.png) -->
 
 We also have issues with the autocorrelation of the chains for sigma_h: even using a high value for the thin parameter we cannot find a chain with no or little autocorrelation. So we'll avoid choosing the Convolutional model.
 
@@ -385,7 +395,6 @@ We can also evaluate the DIC (Deviance Information Criterion):
 ```{R}
 df= data.frame( type=c("spatial", "heterogeneity", "convolutional"), 
                 DIC = c(results.spatial$DIC, results.heterogenity$DIC, results.convo$DIC) )
-rownames(df)=rep("", 3)
 df
 ```
 
