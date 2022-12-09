@@ -1,7 +1,7 @@
 ---
 title: "Assignment 2 Spatial Epidemiology"
 author: "Ferrara Lorenzo, Lucchini Marco"
-date: "29-11-2022"
+date: "9-12-2022"
 output: pdf_document
 ---
 
@@ -25,7 +25,7 @@ library(spatialreg)
 # load("data.Rdata")
 ```
 
-## Description:
+## Description
 
 ### Data of the incidence of larynx cancer diagnosed during 10 years (1982-1991) in the districts of Mersey and West Lancashire in the north-east of England is in the file larynx-dates.odc. They have detected 876 cases in 144 electoral districts. The number of expected cases were calculated using internal standardization, based on the specific rates of sex and age in the zone of study (with the population of the census 1991). 
 
@@ -75,7 +75,7 @@ The data available to as are the following:
 * $O$: Number of observed events
 * $E$: Number of Expected events
 
-In the observed regions 0 to 27 events were registered and the median number of observations is 5. The expected value of the cases was between 0.710 and 11.700 with median 6.365. The two distribution of the data are the following:
+In the observed regions, 0 to 27 events were registered and the median number of observations is 5. The expected value of the cases was between 0.710 and 11.700 with median 6.365. The two distribution of the data are the following:
 
 ```{r out.width="70%"}
 hist(data$O, breaks = 25,  col=rgb(1,0,0,0.5), xlab="Number of events",
@@ -113,14 +113,14 @@ text(coordinates(NW.dataset),label=as.factor(NW.dataset$NAME),cex=0.4)
 
 We notice that in the center of the district there's a cluster of regions with high values of SMR, which slowly lower as we get away from the center.
 
-Now we'll analyse the lattice structure of the data: let's consider neighbors those regions that share geographic limits:
+Now we'll analyse the lattice structure of the data, considering neighbors those regions that share geographic limits:
 ```{r out.width="90%"}
 xxnb <- poly2nb(NW.dataset)
 plot(NW.dataset, border="grey")
 plot(xxnb, coordinates(NW.dataset), add=TRUE, col="blue")
 ```
 
-After establishing the neighbors we compute the weights (weights standardized by row). The weights corresponding to the first four regions are:
+After establishing the neighbors we compute the weights (standardized by row). The weights corresponding to the first four regions are:
 ```{r}
 weight.object<-nb2listw(xxnb, glist=NULL, style="W", zero.policy=TRUE) 
 weight.list = weight.object$weights
@@ -270,7 +270,7 @@ results.convo<-bugs(data=data.spatial,inits=laryx.inits.convo,
 
 To study the convergence we look both at the traceplots of the fitted parameters (the 3 chains should stabilize after some time around the same value) and at the $\hat{R}$ coefficient of the parameters of the models (we'll assume that convergence is reached if $\hat{R} < 1.05$)
 
-To study the autocorrelation of the chain we look at the autocorrelation plots which WinBugs gives us.
+To study the autocorrelation of the chain we look at the autocorrelation plots which WinBugs gives us and verify that the values of the correlations of the chain in different iterations are low, meaning that different iterations are not or almost not correlated with each other. 
 
 - Spatial:
 
@@ -287,6 +287,8 @@ The autocorrelation plots are:
 
 ![](./Spatial/AA_correlations.png)
 
+The chains of the studied parameters seem to have converged, oscillating around a value, and the correlation plots don't present any kind of correlations between contiguous iterations, since all values are low.
+
 - Heterogeneity:
 
 All the $\hat{R}$ coefficients are below 1.05, indeed the maximum value we get is:
@@ -302,6 +304,8 @@ The autocorrelation plots are:
 
 ![](./Spatial/AA_correlations.png)
 
+The chains of the studied parameters seem to have converged, oscillating around a value, and the correlation plots don't present any kind of correlations between contiguous iterations, since all values are low.
+
 - Convolutional:
 
 All the $\hat{R}$ coefficients are below 1.05, indeed the maximum value we get is:
@@ -315,7 +319,7 @@ and the traceplots are:
 
 Since there are more than one random effect, the convergence of the parameters is harder to reach because the Monte Carlo Markov Chain struggles to find a stable value of sigma_h to converge to. 
 
-The autocorrelation plot is
+The autocorrelation plots are:
 
 ![](./Convo/AA_correlations.png)
 
@@ -356,28 +360,9 @@ text(coordinates(NW.dataset), label=round(RR.vector, digits=2),cex=0.5)
 # legend("bottom", legend=leglabs(names(brks)),fill=my.colours, bty="n",cex=0.83, title="Percentils")
 ```
 
-```{r}
-my.colours <- c("yellow", "orange2", "red3", "brown", "black")
-brks <- round(quantile(NW.dataset$SMR, probs=seq(0,1,0.2)), digits=2)
+The values of RR estimated by the model follow a radial pattern, with higher values in the center and gradually lower values far from the center. Its pattern is smoother than the one followed by the observed values of SMR, which presents many low-value hotspots in the center and some high-value clusters in the north. 
 
-layout(matrix(c(1,2,3), nrow = 1), widths = c(3,1.7,3))
-
-plot(NW.dataset, col=my.colours[findInterval(SMR, brks,all.inside=TRUE)], main="SMR")
-text(coordinates(NW.dataset), label=round(SMR, digits=2),cex=0.5)
-# legend("bottom", legend=leglabs(names(brks)),fill=my.colours, bty="n",cex=0.83, title="Percentils")
-
-plot.new()
-legend("center", legend=leglabs(names(brks)),fill=my.colours, bty="n",cex=1, title="Percentils")
-
-# brks <- round(quantile(RR.vector, probs=seq(0,1,0.2)), digits=2)
-plot(NW.dataset, col=my.colours[findInterval(RR.vector, brks,all.inside=TRUE)], main="RR")
-text(coordinates(NW.dataset), label=round(RR.vector, digits=2),cex=0.5)
-# legend("bottom", legend=leglabs(names(brks)),fill=my.colours, bty="n",cex=0.83, title="Percentils")
-```
-
-The values of RR estimated by the model follow a radial pattern - with higher values in the center and gradually lower values far from the center. Its pattern is smoother than the one followed by the observed values of SMR, which present many low-value hotspots in the center and some high-value clusters in the north. 
-
-We could say that the SMR has two main clusters (center and north), of which only one is recognized by the model (center), but from a qualitative point of view the chosen model can describe well the phenomenon, even though just in a rough way and not so in detail. 
+We could say that the SMR has two main clusters (center and north), of which only one is recognized by the model (the central one). Nonetheless, from a qualitative point of view, the chosen model can describe well the phenomenon, even though just in a rough way and not so in detail. 
 
 ### 5.2) Make a plot showing the posterior probability of relative risk of the electoral districts that exceed 1. What do you observe? 
 
@@ -389,21 +374,23 @@ for (i in 1:lunghezza) {
 }
 PV = round(prob.vector, digits = 2)
 
-brks <- round(quantile(PV, probs=seq(0,1,0.2)), digits=2)
+my.colours <- c("darkgreen", "green", "lightgreen", "yellow", "orange2", "red3")
+# brks <- round(quantile(PV, probs=seq(0,1,0.2)), digits=2)
+brks <- c(0, 0.1, 0.3, 0.5, 0.7, 0.9, 1)
 plot(NW.dataset, col=my.colours[findInterval(PV, brks,all.inside=TRUE)], main="prob(RR>1)")
-text(coordinates(NW.dataset), label=round(PV, digits=2),cex=0.5)
+text(coordinates(NW.dataset), label=round(PV, digits=2),cex=0.35)
 legend("left", legend=leglabs(brks),fill=my.colours, bty="n",cex=0.83, title="")
 ```
 
-Let's analyse the meaning of the SMR: a ratio greater than 1 indicates that more mortality has occurred with respect to the expected values, which means that we can state with pretty high probability that the black and brown regions have an increase in the value of the observed cases ($p>46\%$ for the brown regions and $p>80\%$ for the black ones).
+Let's analyse the meaning of the SMR: a ratio greater than 1 indicates that more mortality has occurred expected, therefore we can state with pretty high probability that the highlighted regions have an increase in the value of the observed cases ($p>50\%$ for the yellow regions, $p>70\%$ for the orange ones, $p>90\%$ for the red ones).
 
-We may suppose the presence of an underlying phenomenon which is causing this increase of the mortality due to larynx cancer. It may be linked to some change of the environmental-working conditions in the areas under investigation.
+We may suppose the presence of an underlying phenomenon which is causing this increase of the mortality due to larynx cancer. For example it may be linked to some change of the environmental/working conditions in the areas under investigation.
 
 ### 5.3) Make a plot showing the random effects for each districts (exponential scale) and another with the significance of this parameters. What do you observe?
 
 The random effect is the spatial effect $s[i], \forall i\in\{1, .., 144\}$. If we want to see it in exponential scale, we'll use $resid[i]=e^{s[i]}$.
 
-Notice that the formula is $RR[i] = e^{\alpha_0 + s[i]} = e^{\alpha_0} \cdot e^{s[i]}$ and the multiplying factor is exactly $e^{s[i]}$.
+Notice that the formula for RR is $RR[i] = e^{\alpha_0 + s[i]} = e^{\alpha_0} \cdot e^{s[i]}$ and the multiplying factor is exactly $e^{s[i]}$.
 
 ```{r}
 resid=chosen.model$mean$resid
@@ -424,15 +411,16 @@ plot.new()
 
 # brks <- round(quantile(resid, probs=seq(0,1,0.25)), digits=2)
 brks = c(min(resid), 0.74, 1, 1.41, max(resid))
-plot(NW.dataset, col=my.colours[findInterval(resid, brks,all.inside=TRUE)], main="resid")
+plot(NW.dataset, col=my.colours[findInterval(resid, brks,all.inside=TRUE)], main="Significance")
 text(coordinates(NW.dataset), label=round(resid, digits=2),cex=0.5)
 legend("bottom", legend=leglabs(brks),fill=my.colours, bty="n",cex=0.8)
 ```
 
 These plots show how the spatial effect affects the values of the RR estimated by the model: 
 
-- In the regions where $s[i]>0$, so $e^{s[i]}>1$, RR is positively influenced by the spatial effect, leading to a higher number of deaths than expected
+- In the regions where $s[i]>0$, so $e^{s[i]}>1$, RR is positively influenced by the spatial effect, leading to a higher number of deaths than expected. We also notice that the higher $e^{s[i]}$, the stronger the influence.
 - Viceversa in the regions where $s[i]<0$, so $e^{s[i]}<1$, RR is negatively influenced by the spatial effect, leading to a lower number of deaths than expected.
+
 
 
 
