@@ -7,6 +7,7 @@ output: pdf_document
 
 ```{r include=FALSE}
 knitr::opts_chunk$set( echo=F )
+knitr::opts_chunk$set( cache=T )
 # knitr::opts_chunk$set(out.width = '70%')
 knitr::opts_chunk$set(fig.align = "center")
 knitr::opts_chunk$set(tidy =TRUE)
@@ -85,7 +86,7 @@ legend("topright", legend=c("Observed","Expected"), col=c(rgb(1,0,0,0.5), rgb(0,
 ```
 
 ```{r}
-shp.file <- read_sf(dsn = ".", layer = "NWEngland")
+shp.file <- read_sf(dsn = "data", layer = "NWEngland")
 spatial.file <- sf::as_Spatial(shp.file)
 spatial.file$geometry <- NULL #Eliminate this geographic information
 ```
@@ -148,29 +149,7 @@ Both methods lead us to the conclusion that spatial correlation is present.
 
 ### 2) If we consider that the number of cases of Larynx are a Poisson distribution, are data overdispersed?
 
-We try to fit the data with a Poisson model: 
-
-```{R poisson 1}
-# laryx.Poisson<-paste(getwd(),"/laringe_poisson_model.odc",sep="")
-# laryx.inits<-list(
-#                 list(alpha0=0),
-#                 list(alpha0=-5e-01),
-#                 list(alpha0=rnorm(1))
-#             )
-# 
-# path.winbugs<-paste("C:\\Users\\lofer\\WinBUGS14")
- 
-# mybugsdir<-"C:\\Users\\lofer\\OneDrive\\Documenti\\GitHub\\Epidemiology_2nd_Assignment\\Poisson"
-# 
-# results.Poisson<-bugs(data=data, inits=laryx.inits,
-#                   # parameters.to.save = c("RR","alpha0"),
-#                   parameters.to.save = c("alpha0"),
-#                   model.file=laryx.Poisson, n.chains=3, n.iter=2000, n.burnin = 1000,
-#                   bugs.directory=path.winbugs, debug=debug_on, codaPkg=codaPkg_on, working.directory=mybugsdir)
-# 
-# print(results.Poisson)
-```
-
+We try to fit the data with a Poisson model.
 If the Poisson model fits the data reasonably, we would expect the residual deviance to be roughly equal to the
 degrees of freedom ($n-p=143$).
 
@@ -188,10 +167,9 @@ But we can notice that the residual deviance is very large (3557.1) and that the
 - Heterogeneity model: unstructured overdispersion
 ```{R cache=T}
 path.winbugs = "C:\\Users\\lofer\\WinBUGS14"
-mybugsdir<-"C:\\Users\\lofer\\OneDrive\\Documenti\\GitHub\\Epidemiology_2nd_Assignment\\Hetero"
-# mybugsdir<- paste(getwd(), "/Hetero", sep="")
+mybugsdir<- paste( getwd(), "/output_WinBugs/Het", sep="")
 
-laryx.heterogenity<-paste(getwd(),"/laryx-heterogeneity-model.odc",sep="")
+laryx.heterogenity<-paste(getwd(),"//models//laryx-heterogeneity-model.odc",sep="")
 laryx.inits.heterogenity<-list( list(tau.h = 1, alpha0 = 0, h= rep(0, lunghezza)),
                                 list(tau.h = 0.005, alpha0 = -0.5, h= rep(0, lunghezza)), 
                                 list(tau.h = 0.5, alpha0 = 1, h= rep(0, lunghezza)))
@@ -211,7 +189,7 @@ results.heterogenity<-bugs(data=data,inits=laryx.inits.heterogenity,
 
 - Spatial model: we model a structured overdispersion, using the spatial structure we have created above (the neighbors, the weights and the corresponding adjacency matrix)
 ```{R spatial 1}
-laryx.spatial<-paste(getwd(),"//laryx-spatial-model.odc",sep="")
+laryx.spatial<-paste(getwd(),"//models//laryx-spatial-model.odc",sep="")
 
 w.laryx<-nb2listw(xxnb, style="W", zero.policy=TRUE)
 
@@ -222,7 +200,7 @@ data.spatial<-list(N=data$N,O=data$O,E=data$E,adj=adj,num=card(xxnb),sumNumNeigh
 
 ```{R spatial 2, cache=T}
 
-mybugsdir<-"C:\\Users\\lofer\\OneDrive\\Documenti\\GitHub\\Epidemiology_2nd_Assignment\\Spatial"
+mybugsdir<- paste( getwd(), "\\output_WinBugs\\Spatial", sep="")
 
 laryx.inits.spatial<-list(
   list(alpha0=0,s=rnorm(lunghezza),tau.s=exp(rnorm(1))),
@@ -245,9 +223,9 @@ results.spatial<-bugs(data=data.spatial,inits=laryx.inits.spatial,
 - Convolution model: we create a model which takes into account both a structured (spatial) overdispersion and an unstructured (heterogeneity) one
 ```{R convolutional, cache=T}
 
-mybugsdir<-"C:\\Users\\lofer\\OneDrive\\Documenti\\GitHub\\Epidemiology_2nd_Assignment\\Convo"
+mybugsdir<- paste( getwd(), "\\output_WinBugs\\Convo", sep="")
 
-laryx.convolution<-paste(getwd(),"//laryx-convolution-model.odc",sep="")
+laryx.convolution<-paste(getwd(),"//models//laryx-convolution-model.odc",sep="")
 laryx.inits.convo<-list(
   list(alpha0=0.00000E+00, h=rnorm(lunghezza),tau.h=exp(rnorm(1)), s=rnorm(lunghezza),tau.s=exp(rnorm(1))),
   list(alpha0=-5.00000E-01,h=rnorm(lunghezza),tau.h=exp(rnorm(1)),s=rnorm(lunghezza),tau.s=exp(rnorm(1))),
@@ -281,11 +259,11 @@ max( results.spatial$summary[,8] )
 
 and the traceplots are:
 
-![](./Spatial/AA_parameters.png)
+![](./pictures/Spatial/AA_parameters.png)
 
 The autocorrelation plots are:
 
-![](./Spatial/AA_correlations.png)
+![](./pictures/Spatial/AA_correlations.png)
 
 The chains of the studied parameters seem to have converged, oscillating around a value, and the correlation plots don't present any kind of correlations between contiguous iterations, since all values are low.
 
@@ -298,11 +276,11 @@ max( results.heterogenity$summary[,8] )
 
 and the traceplots are:
 
-![](./Hetero/AA_parameters.png)
+![](./pictures/Hetero/AA_parameters.png)
 
 The autocorrelation plots are:
 
-![](./Spatial/AA_correlations.png)
+![](./pictures/Spatial/AA_correlations.png)
 
 The chains of the studied parameters seem to have converged, oscillating around a value, and the correlation plots don't present any kind of correlations between contiguous iterations, since all values are low.
 
@@ -315,13 +293,13 @@ max( results.convo$summary[,8] )
 
 and the traceplots are:
 
-![](./Convo/AA_parameters.png)
+![](./pictures/Convo/AA_parameters.png)
 
 Since there are more than one random effect, the convergence of the parameters is harder to reach because the Monte Carlo Markov Chain struggles to find a stable value of sigma_h to converge to. 
 
 The autocorrelation plots are:
 
-![](./Convo/AA_correlations.png)
+![](./pictures/Convo/AA_correlations.png)
 
 We also have issues with the autocorrelation of the chains for sigma_h: even using a high value for the thin parameter it's difficult to find a chain with no or little autocorrelation. So we'll avoid choosing the Convolutional model.
 
@@ -420,9 +398,6 @@ These plots show how the spatial effect affects the values of the RR estimated b
 
 - In the regions where $s[i]>0$, so $e^{s[i]}>1$, RR is positively influenced by the spatial effect, leading to a higher number of deaths than expected. We also notice that the higher $e^{s[i]}$, the stronger the influence.
 - Viceversa in the regions where $s[i]<0$, so $e^{s[i]}<1$, RR is negatively influenced by the spatial effect, leading to a lower number of deaths than expected.
-
-
-
 
 ```{r}
 save.image("data.Rdata")
