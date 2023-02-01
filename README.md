@@ -1,6 +1,6 @@
 <h1 align="left"> Larynx Cancer Lattice Data Analysis: Exploring Spatial Correlation in Mersey and West Lancashire </h1>
 
-<h4 align="left">Project for the course of Spatial Epidemiology at Universitat Politecnica de Catalunya, 2022/2023</h4>
+<h4 align="left">Project for the course of Spatial Epidemiology at Universitat Politècnica de Catalunya, 2022/2023</h4>
 
 <p align="left"> Team members:
 <ul>
