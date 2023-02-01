@@ -5,13 +5,9 @@
 <p align="left"> Team members:
 <ul>
   <li>Lorenzo Ferrara (<a href="https://github.com/lorenzoferrara/" target="_blank">Github</a>, <a href="https://www.linkedin.com/in/lorenzo-ferrara-567211244/" target="_blank">Linkedin</a>) </li> 
-  <li>Sofia Raschi</li>
+  <li>Marco Lucchini</li>
 </ul>
 </p>
 
 <h3 align="left">Description:</h3>
-<p align="left">This project aims to examine a discrete-time dynamical system that models the population dynamics of three interacting species x, y and z, with non-overlapping generations, analyzing the conditions that lead to species extinction and those that result in stabilization on periodic orbits, using advanced mathematical
-techniques. This involves studying the stability of equilibrium points, or the existence and stability of periodic solutions. We also use numerical methods to simulate the dynamics of the system and study its behaviour under different initial conditions and parameter values, providing a deeper understanding of complex ecological interactions between multiple species. </p>
-
-<h3 align="left">References:</h3>
-<p align="left">Our analysis is based on the research paper entitled "Dynamics in a Time-Discrete Food-Chain Model with Strong Pressure on Preys" by Ll. Alsedà, B. Vidiella, R. Solé, J.T. Lázaro, and J. Sardanyés, as presented in the content available on this GitHub repository.</p>
+<p align="left">This project aims to explore the incidence of larynx cancer in the districts of Mersey and West Lancashire in the north-east of England using data collected over a 10-year period (1982-1991). The data is analyzed using a combination of exploratory data analysis, Poisson distribution, Bayesian inference, and spatial correlation techniques to better understand the incidence of larynx cancer in this region. The project includes the analysis of Standardized Mobility Ratio (SMR) and the estimation of relative risk for each electoral district. The results of this study are presented in the form of plots and discussion, highlighting key findings and observations about the incidence of larynx cancer in the north-east of England </p>
